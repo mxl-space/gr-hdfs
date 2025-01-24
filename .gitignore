@@ -1,0 +1,14 @@
+# Ignore build artifacts
+build/
+*.o
+*.so
+*.a
+*.pyc
+__pycache__/
+
+# Ignore Doxygen files
+docs/doxygen/generated/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
