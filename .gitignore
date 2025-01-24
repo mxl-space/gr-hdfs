@@ -12,3 +12,7 @@ docs/doxygen/generated/
 # Ignore OS-specific files
 .DS_Store
 Thumbs.db
+
+# Ignore Conda files
+.clang-format
+.conda/

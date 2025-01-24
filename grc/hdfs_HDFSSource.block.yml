@@ -1,0 +1,46 @@
+id: HDFS_HDFSSource
+label: HDFS Source
+category: '[HDFS]'
+
+templates:
+  imports: from gnuradio import HDFS
+  make: HDFS.HDFSSource(${file}, ${folder}, ${webhdfs_address}, ${user}, "${input_type}", ${buffer_size})
+
+parameters:
+  - id: file
+    label: File
+    dtype: string
+    default: "input.txt"
+  - id: folder
+    label: Folder
+    dtype: string
+    default: "/user/mxl/input/"
+  - id: webhdfs_address
+    label: WebHDFS Address
+    dtype: string
+    default: "192.168.10.20:9870"
+  - id: user
+    label: HDFS User
+    dtype: string
+    default: "hadoop"
+  - id: input_type
+    label: Input Type
+    dtype: enum
+    options: ["complex", "float", "int", "short", "byte"]
+    default: "complex"
+  - id: buffer_size
+    label: Buffer Size (bytes)
+    dtype: int
+    default: 134217728  # 128 MB as the default buffer size
+
+inputs: []
+
+outputs:
+  - label: out
+    dtype: ${input_type}  # Dynamic output type based on the selection in the GUI
+    domain: stream
+    optional: 0
+
+file_format: 1
+
+

@@ -1,0 +1,50 @@
+id: HDFS_HDFSSink
+label: HDFS Sink
+category: '[HDFS]'
+
+templates:
+  imports: from gnuradio import HDFS
+  make: HDFS.HDFSSink(${file}, ${folder}, ${webhdfs_address}, ${user}, "${append}", "${input_type}", ${buffer_size})
+
+parameters:
+  - id: file
+    label: File
+    dtype: string
+    default: "output.txt"
+  - id: folder
+    label: Folder
+    dtype: string
+    default: "/user/mxl/input/"
+  - id: webhdfs_address
+    label: WebHDFS Address
+    dtype: string
+    default: "192.168.10.20:9870"
+  - id: user
+    label: HDFS User
+    dtype: string
+    default: "hadoop"
+  - id: input_type
+    label: Input Type
+    dtype: enum
+    options: ["complex", "float", "int", "short", "byte"]
+    default: "complex"
+  - id: append
+    label: Append file
+    dtype: enum
+    options: ["Append", "Overwrite"]
+    default: "Append"
+  - id: buffer_size
+    label: Buffer Size (bytes)
+    dtype: int
+    default: 134217728  # 128 MB as the default buffer size
+
+inputs:
+  - label: in
+    dtype: ${input_type}  # Dynamic input type based on the selection in the GUI
+    domain: stream
+    optional: 0
+
+outputs: []
+
+file_format: 1
+
