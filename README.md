@@ -5,7 +5,7 @@ gr-hdfs is an Out-Of-Tree (OOT) GNU Radio module designed to enable seamless int
 1. **HDFS Sink**: Functions similarly to the built-in File Sink block but writes data to HDFS.
 2. **HDFS Source**: Functions similarly to the built-in File Source block but reads data from HDFS.
 
-This module simplifies working with HDFS within the GNU Radio framework, enabling new possibilities for integrating big data processing pipelines.
+This module uses WebHDFS to simplify working with HDFS within the GNU Radio framework, enabling new possibilities for integrating big data processing pipelines.
 
 ## Features
 
@@ -21,6 +21,7 @@ This module simplifies working with HDFS within the GNU Radio framework, enablin
 
 - GNU Radio installed on your system.
 - CMake (minimum version 3.10 recommended).
+- Python `requests` library installed.
 
 ### Steps
 
@@ -39,7 +40,7 @@ sudo ldconfig
 
 #### Installation in a Conda Environment
 
-If using a Conda environment, specify the Python executable and CMake installation directory:
+If using a Conda environment, you need to specify the Python executable and CMake installation directory:
 
 ```bash
 conda activate <ENV_NAME>
