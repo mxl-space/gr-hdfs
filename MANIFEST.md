@@ -1,17 +1,13 @@
 title: The HDFS OOT Module
-brief: Short description of gr-hdfs
-tags: # Tags are arbitrary, but look at CGRAN what other authors are using
+brief: GNU Radio OOT module with HDFS Sink and Source blocks for reading and writing data to/from Hadoop Distributed File System (HDFS).
+tags:
   - sdr
 author:
-  - Author Name <authors@email.address>
+  - Daniil Voloshin <daniilv@umich.edu>
 copyright_owner:
-  - Copyright Owner 1
-license:
-gr_supported_version: # Put a comma separated list of supported GR versions here
-#repo: # Put the URL of the repository here, or leave blank for default
-#website: <module_website> # If you have a separate project website, put it here
-#icon: <icon_url> # Put a URL to a square image here that will be used as an icon on CGRAN
+  - MXL
+license: GPL-3.0
+gr_supported_version: 3.10
+website: <https://mxl.space>
 ---
-A longer, multi-line description of gr-hdfs.
-You may use some *basic* Markdown here.
-If left empty, it will try to find a README file instead.
+GNU Radio OOT module with HDFS Sink and Source blocks for reading and writing data to/from Hadoop Distributed File System (HDFS).
