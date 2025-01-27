@@ -27,6 +27,7 @@ This module simplifies working with HDFS within the GNU Radio framework, enablin
 #### Standard Installation
 
 ```bash
+git clone https://github.com/mxl-space/gr-hdfs.git
 cd gr-hdfs
 mkdir build
 cd build
@@ -42,6 +43,7 @@ If using a Conda environment, specify the Python executable and CMake installati
 
 ```bash
 conda activate <ENV_NAME>
+git clone https://github.com/mxl-space/gr-hdfs.git
 cd gr-hdfs
 mkdir build
 cd build
