@@ -22,6 +22,7 @@ This module uses WebHDFS to simplify working with HDFS within the GNU Radio fram
 - GNU Radio installed on your system.
 - CMake (minimum version 3.10 recommended).
 - Python `requests` library installed.
+- WebHDFS configured within your Hadoop cluster.
 
 ### Steps
 
