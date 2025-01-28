@@ -1,3 +1,7 @@
+![GitHub last commit](https://img.shields.io/github/last-commit/mxl-space/gr-hdfs)
+![gnuradio](https://img.shields.io/badge/GNU%20Radio-3.10.11-important)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) 
+
 # gr-hdfs
 
 gr-hdfs is an Out-Of-Tree (OOT) GNU Radio module designed to enable seamless interaction with Hadoop Distributed File System (HDFS). It provides two custom blocks:
@@ -6,12 +10,6 @@ gr-hdfs is an Out-Of-Tree (OOT) GNU Radio module designed to enable seamless int
 2. **HDFS Source**: Functions similarly to the built-in File Source block but reads data from HDFS.
 
 This module uses WebHDFS to simplify working with HDFS within the GNU Radio framework, enabling new possibilities for integrating big data processing pipelines.
-
-## Features
-
-- **HDFS Sink**: Stream data directly from GNU Radio to HDFS.
-- **HDFS Source**: Retrieve data from HDFS into GNU Radio workflows.
-- Compatible with GNU Radio and configurable with Python and Conda environments.
 
 ---
 
