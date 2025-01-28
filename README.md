@@ -67,13 +67,13 @@ Here’s an example use case:
 
 1. **HDFS Sink**: Save data from a signal source to an HDFS file.
 
-![Alt text](examples/HDFS Sink.png)
+![Alt text](examples/HDFS_Sink.png)
 
    - Configure the block with the desired HDFS path (e.g., `hdfs://<namenode>:<port>/path/to/file`).
 
 3. **HDFS Source**: Read the saved data from HDFS and process it in GNU Radio.
 
-![Alt text](examples/HDFS Source.png)
+![Alt text](examples/HDFS_Source.png)
 
 ---
 
