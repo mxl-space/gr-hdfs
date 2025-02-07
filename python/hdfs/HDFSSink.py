@@ -24,7 +24,7 @@ class HDFSSink(gr.sync_block):
         """
         Args:
             filename (str): Name of the file to save in HDFS.
-            folder (str): HDFS folder path (e.g., "/user/mxl/input/").
+            folder (str): HDFS folder path (e.g., "/user/hadoop/input/").
             webhdfs_addr (str): WebHDFS API address (e.g., "192.168.10.20:9870").
             user (str): HDFS username to use for API requests (default is "hadoop").
             append (str): Either "Append" or "Overwrite".
