@@ -24,7 +24,7 @@ class HDFSSource(gr.sync_block):
         """
         Args:
             filename (str): Name of the file to read from HDFS.
-            folder (str): HDFS folder path (e.g., "/user/mxl/input/").
+            folder (str): HDFS folder path (e.g., "/user/hadoop/input/").
             webhdfs_addr (str): WebHDFS API address (e.g., "192.168.10.20:9870").
             user (str): HDFS username to use for API requests (default is "hadoop").
             input_type (str): Output data type (e.g., "complex").
