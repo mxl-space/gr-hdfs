@@ -14,7 +14,7 @@ parameters:
   - id: folder
     label: Folder
     dtype: string
-    default: "/user/mxl/input/"
+    default: "/user/hadoop/input/"
   - id: webhdfs_address
     label: WebHDFS Address
     dtype: string
