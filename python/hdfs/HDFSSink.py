@@ -25,8 +25,8 @@ class HDFSSink(gr.sync_block):
         Args:
             filename (str): Name of the file to save in HDFS.
             folder (str): HDFS folder path (e.g., "/user/hadoop/input/").
-            webhdfs_addr (str): WebHDFS API address (e.g., "192.168.10.20:9870").
-            user (str): HDFS username to use for API requests (default is "hadoop").
+            webhdfs_addr (str): WebHDFS API address (e.g., "localhost:9870").
+            user (str): HDFS username to use for API requests.
             append (str): Either "Append" or "Overwrite".
             input_type (str): Input data type (e.g., "complex").
             buffer_size (int): Size of the internal buffer in bytes (default is 128 MB).
