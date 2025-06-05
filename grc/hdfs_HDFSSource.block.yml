@@ -18,7 +18,7 @@ parameters:
   - id: webhdfs_address
     label: WebHDFS Address
     dtype: string
-    default: "192.168.10.20:9870"
+    default: "localhost:9870"
   - id: user
     label: HDFS User
     dtype: string
