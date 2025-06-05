@@ -25,8 +25,8 @@ class HDFSSource(gr.sync_block):
         Args:
             filename (str): Name of the file to read from HDFS.
             folder (str): HDFS folder path (e.g., "/user/hadoop/input/").
-            webhdfs_addr (str): WebHDFS API address (e.g., "192.168.10.20:9870").
-            user (str): HDFS username to use for API requests (default is "hadoop").
+            webhdfs_addr (str): WebHDFS API address (e.g., "localhost:9870").
+            user (str): HDFS username to use for API requests.
             input_type (str): Output data type (e.g., "complex").
             chunk_size (int): Number of bytes to read from HDFS per request (default is 128 MB).
         """
