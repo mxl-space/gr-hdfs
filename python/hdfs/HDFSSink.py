@@ -16,7 +16,7 @@ import queue
 
 class HDFSSink(gr.sync_block):
     """
-    HDFSSink block writes binary data streams to an HDFS folder via WebHDFS API.
+    HDFSSink block writes binary data streams to an HDFS folder via the WebHDFS API.
     Mimics GNU Radio's File Sink block but targets HDFS instead of a local file system.
     """
 
@@ -29,7 +29,7 @@ class HDFSSink(gr.sync_block):
             user (str): HDFS username to use for API requests (default is "hadoop").
             append (str): Either "Append" or "Overwrite".
             input_type (str): Input data type (e.g., "complex").
-            buffer_size (int): Size of the internal buffer in bytes (default is 1 MB).
+            buffer_size (int): Size of the internal buffer in bytes (default is 128 MB).
         """
 
         # Map input types to numpy dtypes
@@ -41,10 +41,10 @@ class HDFSSink(gr.sync_block):
             "byte": np.int8
         }
 
-        # Define in_sig based on input_type
+        # Define in_sig based on the selected input_type
         in_sig = [input_type_dict[input_type]]
 
-        # Call the parent constructor
+        # Call the parent constructor with the determined input signal type and no output
         super(HDFSSink, self).__init__(
             name="HDFSSink",
             in_sig=in_sig,   # Pass the determined input signal type
@@ -57,13 +57,13 @@ class HDFSSink(gr.sync_block):
         self.user = user
         self.append = append == "Append"
 
-        # Construct the full HDFS file path
+        # Construct the full HDFS file path and normalize separators
         self.hdfs_file_path = os.path.join(self.folder, self.filename).replace("\\", "/")
 
-        # Set the WebHDFS endpoint
+        # Base URL for WebHDFS operations on this file (uses user.name for authentication)
         self.base_url = f"http://{self.webhdfs_addr}/webhdfs/v1{self.hdfs_file_path}?user.name={self.user}"
 
-        # Internal buffering setup
+        # Internal buffering setup: buffer_size is the threshold for flushing to HDFS
         self.buffer_size = buffer_size
         self.internal_buffer = bytearray()
         self.queue = queue.Queue()
@@ -72,20 +72,22 @@ class HDFSSink(gr.sync_block):
         self.lock = threading.Lock()
 
     def start(self):
-        """Prepare for writing data to HDFS."""
+        """Prepare for writing data to HDFS: check existence, delete or create file as needed."""
         print("Starting HDFSSink block...")
         try:
-            # Check if the file exists
+            # Check if the target file already exists in HDFS
             response = requests.get(f"{self.base_url}&op=GETFILESTATUS", timeout=10)
 
             if response.status_code == 200:
                 print("File exists.")
                 if not self.append:
+                    # Overwrite mode: delete the existing file before creating a new one
                     print("Overwrite mode: Deleting existing file.")
                     delete_response = requests.delete(f"{self.base_url}&op=DELETE&recursive=true", timeout=10)
                     if delete_response.status_code not in [200, 201]:
                         raise RuntimeError(f"Failed to delete existing file: {delete_response.text}")
                     print("File deleted successfully.")
+                    # Create a new empty file in HDFS
                     print("Creating new file.")
                     response = requests.put(f"{self.base_url}&op=CREATE&overwrite=true", timeout=10)
                     if response.status_code not in [200, 201]:
@@ -93,6 +95,7 @@ class HDFSSink(gr.sync_block):
                     else:
                         print("File created successfully.")
             else:
+                # File does not exist: create it in overwrite mode to ensure it's fresh
                 print("File does not exist. Creating it...")
                 response = requests.put(f"{self.base_url}&op=CREATE&overwrite=true", timeout=10)
                 if response.status_code not in [200, 201]:
@@ -102,30 +105,32 @@ class HDFSSink(gr.sync_block):
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Error initializing HDFS Sink: {str(e)}")
 
-        # Start the writer thread
+        # Start the background writer thread to handle queued data chunks
         self.writer_thread.start()
         print("HDFSSink block successfully started.")
         return super().start()
 
     def work(self, input_items, output_items):
-        """Push input data to the internal buffer."""
+        """Push incoming data into the internal buffer, flushing to the queue when threshold is reached."""
         in0 = input_items[0]
 
         with self.lock:
             self.internal_buffer.extend(in0.tobytes())
 
-        # Flush the buffer to the queue if it exceeds the threshold
+        # If the internal buffer has grown to at least buffer_size, enqueue a chunk for writing
         if len(self.internal_buffer) >= self.buffer_size:
             self.queue.put(self.internal_buffer[:self.buffer_size])
+            # Retain any leftover bytes in the buffer
             self.internal_buffer = self.internal_buffer[self.buffer_size:]
 
         return len(in0)
 
     def _writer(self):
-        """Background thread for writing data to HDFS."""
+        """Background thread for writing data chunks to HDFS."""
         while not self.stop_event.is_set() or not self.queue.empty():
             try:
-                chunk = self.queue.get(timeout=1)  # Wait for data or timeout
+                # Wait up to 1 second for a data chunk
+                chunk = self.queue.get(timeout=1)
                 response = requests.post(
                     f"{self.base_url}&op=APPEND",  # Always use APPEND since file handled in start()
                     headers={"Content-Type": "application/octet-stream"},
@@ -135,12 +140,12 @@ class HDFSSink(gr.sync_block):
                 if response.status_code not in [200, 201]:
                     print(f"Failed to write to HDFS: {response.text}")
             except queue.Empty:
-                continue  # No data in the queue, keep waiting
+                continue  # No data to write right now; loop again
             except requests.exceptions.RequestException as e:
                 print(f"Error writing to HDFS: {str(e)}")
 
     def stop(self):
-        """Clean up resources when stopping the block."""
+        """Flush remaining data, signal the writer thread to finish, and clean up."""
         print("Stopping HDFSSink block...")
 
         # Flush any remaining data in the internal buffer to the queue
@@ -149,7 +154,7 @@ class HDFSSink(gr.sync_block):
                 self.queue.put(self.internal_buffer)
                 self.internal_buffer = bytearray()
 
-        # Signal the writer thread to stop
+        # Signal the writer thread to exit and wait for it to finish
         self.stop_event.set()
         self.writer_thread.join()
         print("HDFSSink block stopped successfully.")
