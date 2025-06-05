@@ -28,7 +28,7 @@ class HDFSSource(gr.sync_block):
             webhdfs_addr (str): WebHDFS API address (e.g., "192.168.10.20:9870").
             user (str): HDFS username to use for API requests (default is "hadoop").
             input_type (str): Output data type (e.g., "complex").
-            chunk_size (int): Size of the chunks to read from HDFS in bytes (default is 128 MB).
+            chunk_size (int): Number of bytes to read from HDFS per request (default is 128 MB).
         """
 
         # Map input types to numpy dtypes
@@ -40,14 +40,14 @@ class HDFSSource(gr.sync_block):
             "byte": np.int8
         }
 
-        # Define out_sig based on input_type
+        # Define out_sig based on the selected input_type
         out_sig = [input_type_dict[input_type]]
 
-        # Call the parent constructor
+        # Call the parent constructor with no input signal and the determined output type
         super(HDFSSource, self).__init__(
             name="HDFSSource",
-            in_sig=[],       # No input signal
-            out_sig=out_sig  # Pass the determined output signal type
+            in_sig=[],
+            out_sig=out_sig
         )
 
         self.filename = filename
@@ -55,13 +55,13 @@ class HDFSSource(gr.sync_block):
         self.webhdfs_addr = webhdfs_addr
         self.user = user
 
-        # Construct the full HDFS file path
+        # Construct the full HDFS file path and normalize separators
         self.hdfs_file_path = os.path.join(self.folder, self.filename).replace("\\", "/")
 
-        # Set the WebHDFS endpoint
+        # Base URL for WebHDFS operations on this file (uses user.name for authentication)
         self.base_url = f"http://{self.webhdfs_addr}/webhdfs/v1{self.hdfs_file_path}?user.name={self.user}"
 
-        # Internal buffering setup
+        # Size (in bytes) to request per OPEN operation; stored data is enqueued for output
         self.chunk_size = chunk_size
         self.data_queue = queue.Queue()
         self.stop_event = threading.Event()
@@ -69,10 +69,10 @@ class HDFSSource(gr.sync_block):
         self.lock = threading.Lock()
 
     def start(self):
-        """Prepare for reading data from HDFS."""
+        """Prepare for reading data from HDFS: verify that the file exists before starting the reader."""
         print("Starting HDFSSource block...")
         try:
-            # Check if the file exists
+            # Check whether the specified file exists in HDFS
             response = requests.get(f"{self.base_url}&op=GETFILESTATUS", timeout=10)
 
             if response.status_code != 200:
@@ -80,37 +80,39 @@ class HDFSSource(gr.sync_block):
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Error initializing HDFS Source: {str(e)}")
 
-        # Start the reader thread
+        # Launch the background reader thread to fetch data chunks
         self.reader_thread.start()
         print("HDFSSource block successfully started.")
         return super().start()
 
     def work(self, input_items, output_items):
-        """Provide data from the internal queue to the output buffer."""
+        """Fill the output buffer from the internal queue of data chunks."""
         out0 = output_items[0]
         items_written = 0
 
         while items_written < len(out0):
             try:
-                chunk = self.data_queue.get(timeout=1)  # Wait for data or timeout
+                # Block up to 1 second waiting for the next data chunk
+                chunk = self.data_queue.get(timeout=1)
 
-                # Determine how much data to copy to the output buffer
+                # Calculate how many bytes to copy into the output buffer
                 bytes_to_copy = min(len(chunk), (len(out0) - items_written) * out0.itemsize)
                 np_chunk = np.frombuffer(chunk[:bytes_to_copy], dtype=out0.dtype)
                 out0[items_written:items_written + len(np_chunk)] = np_chunk
                 items_written += len(np_chunk)
 
-                # If there's leftover data, requeue it
+                # If there is leftover data beyond what fits in out0, put it back into the queue
                 if bytes_to_copy < len(chunk):
                     self.data_queue.put(chunk[bytes_to_copy:])
 
             except queue.Empty:
-                break  # No data available in the queue
+                # No data available in the queue right now; break to return whatever was written
+                break
 
         return items_written
 
     def _reader(self):
-        """Background thread for reading data from HDFS."""
+        """Background thread that fetches data chunks from HDFS using OPEN operations."""
         offset = 0
 
         while not self.stop_event.is_set():
@@ -124,12 +126,15 @@ class HDFSSource(gr.sync_block):
                     data = response.content
 
                     if data:
+                        # Enqueue the received bytes and update the read offset
                         self.data_queue.put(data)
                         offset += len(data)
                     else:
+                        # No more data: end of file reached
                         print("End of HDFS file reached.")
                         break
                 else:
+                    # Failed to read from HDFS; log and exit
                     print(f"Failed to read from HDFS: {response.text}")
                     break
 
@@ -138,10 +143,8 @@ class HDFSSource(gr.sync_block):
                 break
 
     def stop(self):
-        """Clean up resources when stopping the block."""
+        """Signal the reader thread to stop and wait for it to finish before exiting."""
         print("Stopping HDFSSource block...")
-
-        # Signal the reader thread to stop
         self.stop_event.set()
         self.reader_thread.join()
         print("HDFSSource block stopped successfully.")
